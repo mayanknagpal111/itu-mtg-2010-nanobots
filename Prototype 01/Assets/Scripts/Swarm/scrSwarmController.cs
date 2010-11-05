@@ -86,9 +86,14 @@ public class scrSwarmController : MonoBehaviour
                     path.AddRange(Path.FindPath(nearestSwarm.Part, (uint)nearestSwarm.Index, nearestMouse.Part, (uint)nearestMouse.Index));
                     //path.Add(new Transform(Camera.main.ScreenToWorldPoint(Input.mousePosition)));
                     scrSwarm other;
+                    scrWound wound;
                     if (ShouldMerge(out other))
                     {
                         iTween.MoveTo(selectedSwarm.gameObject, iTween.Hash("path", path.ToArray(), "speed", selectedSwarm.Speed, "easetype", iTween.EaseType.easeInOutCubic, "looptype", iTween.LoopType.none, "oncomplete", "Merge", "oncompletetarget", selectedSwarm.gameObject, "oncompleteparams", other));
+                    }
+                    else if (GonnaHeal(out wound))
+                    {
+                        iTween.MoveTo(selectedSwarm.gameObject, iTween.Hash("path", path.ToArray(), "speed", selectedSwarm.Speed, "easetype", iTween.EaseType.easeInOutCubic, "looptype", iTween.LoopType.none, "oncomplete", "Heal", "oncompletetarget", wound.gameObject, "oncompleteparams", selectedSwarm));
                     }
                     else
                     {
@@ -136,7 +141,8 @@ public class scrSwarmController : MonoBehaviour
                                 Debug.Log("Update() Error - Wrong Swarm Type");
                                 return;
                         }
-                        
+
+                        newSwarm.transform.parent = transform;
                         newSwarm.Size = selectedSwarm.Size * ratio;
                         selectedSwarm.Size = selectedSwarm.Size - newSwarm.Size;
                         Debug.Log(newSwarm.Size);
@@ -241,6 +247,24 @@ public class scrSwarmController : MonoBehaviour
         }
 
         other = null;
+        return false;
+    }
+
+    bool GonnaHeal(out scrWound wound)
+    {
+        RaycastHit rayHit;
+
+        if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out rayHit)) //TODO: brug layer mask
+        {
+            scrWound s = (scrWound)(rayHit.collider.gameObject.GetComponent("scrWound"));
+            if (s != null)
+            {
+                wound = s;
+                return true;
+            }
+        }
+
+        wound = null;
         return false;
     }
 }
